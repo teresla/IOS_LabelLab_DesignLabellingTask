@@ -2,31 +2,23 @@
 //  LabelLabApp.swift
 //  LabelLab
 //
-//  Created by Teresa Windlin on 13.11.2024.
+//  Created by Teresa Windlin on 19.11.2024.
 //
 
 import SwiftUI
-import SwiftData
 
 @main
 struct LabelLabApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    @State private var userSettings = UserSettings.shared
+    @State private var taskState = TaskState()
+    @State private var isLoggedIn: Bool = false
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-        }
-        .modelContainer(sharedModelContainer)
+            MainView()
+                .environment(userSettings)
+                .environment(taskState)
+                .modelContainer(SwiftDataManager.shared.modelContainer)
+                .preferredColorScheme(userSettings.alwaysUseDarkMode ? .dark : nil)        }
     }
 }
