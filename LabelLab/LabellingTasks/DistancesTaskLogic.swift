@@ -17,8 +17,13 @@ class DistancesTaskLogic: ObservableObject {
     @Published var image1: String = ""
     @Published var image2: String = ""
     @Published var image3: String = ""
-    @Published var image2Offset: CGFloat = 0.0
-    @Published var image3Offset: CGFloat = 0.0
+    @Published var image2Offset: CGSize = .zero
+    @Published var image3Offset: CGSize = .zero
+    @Published var isImage2Held: Bool = false
+    @Published var isImage3Held: Bool = false
+    @Published var isDragging2: Bool = false
+    @Published var isDragging3: Bool = false
+    @Published var isImage1Held: Bool = false
 
     init() {
         reshuffleImages()
@@ -30,15 +35,15 @@ class DistancesTaskLogic: ObservableObject {
         image1 = shuffled[0]
         image2 = shuffled[1]
         image3 = shuffled[2]
-        image2Offset = 0.0
-        image3Offset = 0.0
+        image2Offset = .zero
+        image3Offset = .zero
     }
 
     // Save distances
     func saveDistances() {
-        // Calculate distances
-        let distance1_2 = Double(abs(image2Offset) / 200.0) // Normalize distances (example scale)
-        let distance1_3 = Double(abs(image3Offset) / 200.0)
+        // Calculate distances - now using vector magnitude
+        let distance1_2 = calculateNormalizedDistance(image2Offset)
+        let distance1_3 = calculateNormalizedDistance(image3Offset)
 
         // Create DistanceAttempt
         let attempt = DistanceAttempt(
@@ -56,5 +61,11 @@ class DistancesTaskLogic: ObservableObject {
 
         // Automatically reshuffle after saving
         reshuffleImages()
+    }
+
+    // Helper function to calculate normalized distance from CGSize
+    private func calculateNormalizedDistance(_ offset: CGSize) -> Double {
+        let magnitude = sqrt(pow(Double(offset.width), 2) + pow(Double(offset.height), 2))
+        return magnitude / 200.0  // Normalize using the same scale factor
     }
 }

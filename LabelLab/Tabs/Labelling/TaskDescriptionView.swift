@@ -45,11 +45,28 @@ struct TaskDescriptionView: View {
             NavigationStack {
                 AnyView(erasing: currentTask.task)
                     .toolbar {
-                        Button("Cancel") {
-                            taskState.finish(successful: false)
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            HStack(spacing: 12) {
+                                Button(action: {
+                                    taskState.finish(successful: false)
+                                }) {
+                                    Image(systemName: "arrow.backward")
+                                        .foregroundStyle(.white)
+                                        .font(.system(size: 22, weight: .bold))
+                                }
+                                
+                                Text(currentTask.task.title)
+                                    .foregroundStyle(.white)
+                                    .font(.headline)
+                            }
                         }
                     }
             }
         }
     }
+}
+
+#Preview {
+    TaskDescriptionView(task: DistancesTask())
+        .environment(TaskState())
 }
