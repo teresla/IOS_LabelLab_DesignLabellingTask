@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct DistancesTask: LabellingTask {
     let id = UUID()
@@ -8,6 +9,14 @@ struct DistancesTask: LabellingTask {
 
     @StateObject private var logic = DistancesTaskLogic()
     @Environment(TaskState.self) private var taskState
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var lastTappedImage: Int = 0
+    @State private var lastFeedbackPosition2: CGPoint?
+    @State private var lastFeedbackPosition3: CGPoint?
+    private let feedbackThreshold: CGFloat = 20.0
+
+    private let lineThickness: CGFloat = 3.0
+    private let hapticFeedback = UIImpactFeedbackGenerator(style: .light)
 
     var body: some View {
         GeometryReader { geometry in
@@ -24,17 +33,42 @@ struct DistancesTask: LabellingTask {
 
                 // Interactive content: Lines and images above the buttons
                 ZStack {
-                    // Fixed Lines
+                    // Fixed Lines with Ticks
                     Path { path in
                         // Left Line
-                        path.move(to: CGPoint(x: XAnker - XOffset, y: YAnker - YOffset))
-                        path.addLine(to: CGPoint(x: XAnker - (imageSize/2), y: YAnker - endYOffset))
+                        let leftStart = CGPoint(x: XAnker - XOffset, y: YAnker - YOffset)
+                        let leftEnd = CGPoint(x: XAnker - (imageSize/2), y: YAnker - endYOffset)
+                        drawRulerLine(path: &path, start: leftStart, end: leftEnd)
 
                         // Right Line
-                        path.move(to: CGPoint(x: XAnker + XOffset, y: YAnker - YOffset))
-                        path.addLine(to: CGPoint(x: XAnker + (imageSize/2), y: YAnker - endYOffset))
+                        let rightStart = CGPoint(x: XAnker + XOffset, y: YAnker - YOffset)
+                        let rightEnd = CGPoint(x: XAnker + (imageSize/2), y: YAnker - endYOffset)
+                        drawRulerLine(path: &path, start: rightStart, end: rightEnd)
                     }
-                    .stroke(Color.white, lineWidth: 3) // Red, fixed lines
+                    .stroke(colorScheme == .dark ? Color.white : Color.black, lineWidth: lineThickness)
+                    .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+
+                    // Endpoint Dots
+                    Circle()
+                        .fill(colorScheme == .dark ? Color.white : Color.black)
+                        .frame(width: 16, height: 16)
+                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                        .position(x: XAnker - XOffset, y: YAnker - YOffset)
+                    Circle()
+                        .fill(colorScheme == .dark ? Color.white : Color.black)
+                        .frame(width: 16, height: 16)
+                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                        .position(x: XAnker - (imageSize/2), y: YAnker - endYOffset)
+                    Circle()
+                        .fill(colorScheme == .dark ? Color.white : Color.black)
+                        .frame(width: 16, height: 16)
+                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                        .position(x: XAnker + XOffset, y: YAnker - YOffset)
+                    Circle()
+                        .fill(colorScheme == .dark ? Color.white : Color.black)
+                        .frame(width: 16, height: 16)
+                        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                        .position(x: XAnker + (imageSize/2), y: YAnker - endYOffset)
 
                     // Images
                     ZStack {
@@ -44,9 +78,11 @@ struct DistancesTask: LabellingTask {
                             .scaleEffect(logic.isImage1Held ? 3 : 2.0)
                             .animation(.easeInOut(duration: 0.2), value: logic.isImage1Held)
                             .position(x: XAnker, y: YAnker)
+                            .zIndex(lastTappedImage == 1 ? 3 : 0)
                             .onTapGesture {
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     logic.isImage1Held = true
+                                    lastTappedImage = 1
                                 }
                             }
 
@@ -62,10 +98,12 @@ struct DistancesTask: LabellingTask {
                                 x: XAnker - XOffset + logic.image2Offset.width,
                                 y: YAnker - YOffset + logic.image2Offset.height
                             )
+                            .zIndex(lastTappedImage == 2 ? 3 : 0)
                             .onTapGesture {
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     logic.isImage2Held = true
                                     logic.isImage3Held = false
+                                    lastTappedImage = 2
                                 }
                             }
                             .gesture(
@@ -76,6 +114,18 @@ struct DistancesTask: LabellingTask {
                                             logic.isImage2Held = false
                                             logic.isImage1Held = false
                                         }
+                                        
+                                        // Calculate distance moved
+                                        if let lastPosition = lastFeedbackPosition2 {
+                                            let distance = hypot(value.location.x - lastPosition.x, value.location.y - lastPosition.y)
+                                            if distance > feedbackThreshold {
+                                                hapticFeedback.impactOccurred()
+                                                lastFeedbackPosition2 = value.location
+                                            }
+                                        } else {
+                                            lastFeedbackPosition2 = value.location
+                                        }
+                                        
                                         logic.image2Offset = calculateOffsetAlongLine(
                                             value: value,
                                             startPoint: CGPoint(x: XAnker - XOffset, y: YAnker - YOffset),
@@ -86,6 +136,8 @@ struct DistancesTask: LabellingTask {
                                         withAnimation(.easeInOut(duration: 0.2)) {
                                             logic.isDragging2 = false
                                         }
+                                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                        lastFeedbackPosition2 = nil
                                     }
                             )
 
@@ -101,10 +153,12 @@ struct DistancesTask: LabellingTask {
                                 x: XAnker + XOffset + logic.image3Offset.width,
                                 y: YAnker - YOffset + logic.image3Offset.height
                             )
+                            .zIndex(lastTappedImage == 3 ? 3 : 0)
                             .onTapGesture {
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     logic.isImage3Held = true
                                     logic.isImage2Held = false
+                                    lastTappedImage = 3
                                 }
                             }
                             .gesture(
@@ -115,6 +169,18 @@ struct DistancesTask: LabellingTask {
                                             logic.isImage3Held = false
                                             logic.isImage1Held = false
                                         }
+                                        
+                                        // Calculate distance moved
+                                        if let lastPosition = lastFeedbackPosition3 {
+                                            let distance = hypot(value.location.x - lastPosition.x, value.location.y - lastPosition.y)
+                                            if distance > feedbackThreshold {
+                                                hapticFeedback.impactOccurred()
+                                                lastFeedbackPosition3 = value.location
+                                            }
+                                        } else {
+                                            lastFeedbackPosition3 = value.location
+                                        }
+                                        
                                         logic.image3Offset = calculateOffsetAlongLine(
                                             value: value,
                                             startPoint: CGPoint(x: XAnker + XOffset, y: YAnker - YOffset),
@@ -125,6 +191,8 @@ struct DistancesTask: LabellingTask {
                                         withAnimation(.easeInOut(duration: 0.2)) {
                                             logic.isDragging3 = false
                                         }
+                                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                        lastFeedbackPosition3 = nil
                                     }
                             )
                     }
@@ -137,28 +205,28 @@ struct DistancesTask: LabellingTask {
                 HStack(spacing: 20) {
                     // Reshuffle Button
                     Button(action: { logic.reshuffleImages() }) {
-                        HStack {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                        }
-                        .font(.system(size: 18, weight: .semibold))
-                        .frame(width: geometry.size.width * 0.35, height: 50)
-                        .background(Color.white.opacity(0.8))
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                        .shadow(color: Color(.sRGB, white: 0, opacity: 0.2), radius: 5, x: 0, y: 3)
+                        Circle()
+                            .stroke(Color.blue, lineWidth: 2)
+                            .frame(width: 60, height: 60)
+                            .overlay {
+                                Image(systemName: "arrow.triangle.2.circlepath")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.blue)
+                            }
+                            .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
                     }
 
                     // Confirm Button
                     Button(action: { logic.saveDistances() }) {
-                        HStack {
-                            Image(systemName: "checkmark.circle")
-                        }
-                        .font(.system(size: 18, weight: .semibold))
-                        .frame(width: geometry.size.width * 0.35, height: 50)
-                        .background(Color.green.opacity(0.8))
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                        .shadow(color: Color(.sRGB, white: 0, opacity: 0.2), radius: 5, x: 0, y: 3)
+                        Circle()
+                            .stroke(Color.green, lineWidth: 2)
+                            .frame(width: 60, height: 60)
+                            .overlay {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.green)
+                            }
+                            .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
                     }
                 }
                 .padding(.bottom, geometry.safeAreaInsets.bottom + 20) // Ensure padding with safe area
@@ -205,20 +273,74 @@ struct DistancesTask: LabellingTask {
         
         return CGSize(width: projectedX, height: projectedY)
     }
+
+    private func drawRulerLine(path: inout Path, start: CGPoint, end: CGPoint) {
+        // Main line
+        path.move(to: start)
+        path.addLine(to: end)
+        
+        // Calculate line angle and length
+        let dx = end.x - start.x
+        let dy = end.y - start.y
+        let angle = atan2(dy, dx)
+        
+        // Number of ticks
+        let majorTickCount = 5
+        let minorTicksPerMajor = 5
+        
+        // Tick lengths
+        let majorTickLength: CGFloat = 15
+        let minorTickLength: CGFloat = 10
+        
+        // Draw ticks
+        for i in 0...majorTickCount {
+            let progress = CGFloat(i) / CGFloat(majorTickCount)
+            let x = start.x + dx * progress
+            let y = start.y + dy * progress
+            
+            // Major tick
+            let perpX = -sin(angle) * majorTickLength / 2
+            let perpY = cos(angle) * majorTickLength / 2
+            
+            path.move(to: CGPoint(x: x - perpX, y: y - perpY))
+            path.addLine(to: CGPoint(x: x + perpX, y: y + perpY))
+            
+            // Minor ticks
+            if i < majorTickCount {
+                for j in 1..<minorTicksPerMajor {
+                    let minorProgress = progress + (CGFloat(j) / CGFloat(minorTicksPerMajor)) * (1.0 / CGFloat(majorTickCount))
+                    let minorX = start.x + dx * minorProgress
+                    let minorY = start.y + dy * minorProgress
+                    
+                    let minorPerpX = -sin(angle) * minorTickLength / 2
+                    let minorPerpY = cos(angle) * minorTickLength / 2
+                    
+                    path.move(to: CGPoint(x: minorX - minorPerpX, y: minorY - minorPerpY))
+                    path.addLine(to: CGPoint(x: minorX + minorPerpX, y: minorY + minorPerpY))
+                }
+            }
+        }
+    }
 }
 
 struct ImageView: View {
     let imageName: String
     let circleColor: Color
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         ZStack {
+            // Add shadow behind the entire component
             Circle()
                 .fill(circleColor)
+                .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
             Image(imageName)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .clipShape(Circle())
+            Circle()
+                .stroke(colorScheme == .dark ? Color.white : Color.black, lineWidth: 2)
+                .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
         }
     }
 }
@@ -226,7 +348,7 @@ struct ImageView: View {
 #Preview {
     DistancesTask()
         .environment(TaskState())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
 }
 
 
