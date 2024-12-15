@@ -1,21 +1,11 @@
-//
-//  ImageToWhichText.swift
-//  LabelLab
-//
-//  Created by Teresa Windlin on 13.11.2024.
-//
-
-
 import SwiftUI
 import SwiftData
-
-import SwiftUI
 
 struct ImageToWhichTextTask: LabellingTask {
     let id = UUID()
     let title: String = "Image to which text"
     let description: String = "Set which text describe images better"
-    let titelImage: Image = Image(systemName: "arrow.2.circlepath.circle")
+    let titelImage: Image = Image(ImageResource.iconWhichText)
 
     @State private var currentImage: String = ""
     @State private var text1: String = ""
