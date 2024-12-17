@@ -126,9 +126,9 @@ class SwiftDataManager {
         saveUser(users[index])
     }
     
-    func registerNewUser(username: String, categories: [String] = ["Watches"]) {
+    func registerNewUser(username: String, categories: [String] = ["Watches"], linkedinLink: String? = nil) {
         // Create a new user
-        let newUser = User(username: username)
+        let newUser = User(username: username, linkedinLink: linkedinLink)
 
         // Save the new user to SwiftData
         SwiftDataManager.shared.saveUser(newUser)
@@ -137,7 +137,7 @@ class SwiftDataManager {
         UserSettings.shared.username = newUser.username
         UserSettings.shared.id = newUser.id
         
-        print("User registered: \(newUser.username), \(newUser.id.uuidString)")
+        print("User registered: \(newUser.username), \(newUser.id.uuidString), LinkedIn: \(newUser.linkedinLink ?? "None")")
     }
 
     

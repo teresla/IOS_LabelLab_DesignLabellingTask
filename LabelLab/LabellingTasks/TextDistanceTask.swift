@@ -58,6 +58,6 @@ struct TextDistanceTask: LabellingTask {
         .onAppear {
             logic.reshuffle() // Fetch data on view appear
         }
-        .navigationBarBackButtonHidden(true)
+        .navigationBarHidden(true)
     }
 }

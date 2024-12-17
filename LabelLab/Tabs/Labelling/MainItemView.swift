@@ -23,6 +23,7 @@ struct MainItemView: View {
                 task.titelImage
                     .resizable()
                     .aspectRatio(contentMode: .fit)
+                    .cornerRadius(10)
 
                 Text(task.title)
                     .font(.headline)

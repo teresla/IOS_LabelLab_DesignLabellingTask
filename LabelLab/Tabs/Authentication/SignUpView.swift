@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SignupView: View {
+    @EnvironmentObject var userSettings: UserSettings
     @Binding var isAuthenticated: Bool
     @State private var username: String = ""
     @State private var showNextPage: Bool = false
@@ -47,6 +48,7 @@ struct SignupView: View {
     private func handleSignupComplete(newUser: User) {
         // Automatically log in the user after signing up
         SwiftDataManager.shared.saveUser(newUser)
+        userSettings.updateForUser(user: newUser)
         isAuthenticated = true
     }
 }

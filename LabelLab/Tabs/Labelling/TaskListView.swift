@@ -37,18 +37,13 @@ struct TaskListView: View {
                                 .foregroundColor(selectedCategory == category ? .white : .black)
                                 .background(selectedCategory == category ? categoryColors[category] : Color.gray.opacity(0.2))
                                 .cornerRadius(15)
+                                .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
                         }
                     }
                 }
                 .padding(.horizontal)
             }
 
-            // Task List
-            Text("Labelling Tasks")
-                .font(.headline)
-                .fontWeight(.semibold)
-                .padding(.leading, 16)
-                .padding(.top, 10)
 
             ScrollView {
                 VStack(spacing: 8) {
@@ -59,6 +54,7 @@ struct TaskListView: View {
                             selectedCategory: $selectedCategory,
                             onStartTask: onStartTask
                         )
+                        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
                     }
                 }
                 .padding(.horizontal, 16)

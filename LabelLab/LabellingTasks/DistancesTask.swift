@@ -44,7 +44,7 @@ struct DistancesTask: LabellingTask {
                 }
             )
         }
-        .navigationBarBackButtonHidden(true)
+        .navigationBarHidden(true)
     }
 }
 
