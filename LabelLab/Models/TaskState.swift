@@ -1,10 +1,3 @@
-//
-//  TaskState.swift
-//  LabelLab
-//
-//  Created by Teresa Windlin on 20.11.2024.
-//
-
 import Foundation
 import SwiftUI
 
@@ -22,6 +15,8 @@ class TaskState {
 
     func startTask(_ task: any LabellingTask) {
         current = TaskStart(start: Date(), task: task)
+        print("Started task: \(task.title)") // Debugging log
+
     }
 
     func finish(successful: Bool) {
@@ -29,11 +24,8 @@ class TaskState {
 
         let elapsedTime = Date().timeIntervalSince(current.start)
 
-        // Save attempt logic here (if needed)
-        // You could integrate your storage mechanism for tracking completed tasks
         print("Task '\(current.task.title)' completed. Successful: \(successful). Time taken: \(elapsedTime) seconds.")
 
         self.current = nil
     }
 }
-/Users/teres/Documents/GitHub/LabelLab/LabelLab/Models

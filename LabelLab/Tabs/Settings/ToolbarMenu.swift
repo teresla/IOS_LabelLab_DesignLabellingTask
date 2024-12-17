@@ -1,36 +1,50 @@
-//
-//  ToolbarMenu.swift
-//  LabelLab
-//
-//  Created by Teresa Windlin on 25.11.2024.
-//
 import SwiftUI
 
 struct ToolbarMenu: View {
-    let currentUser: User?
+    let currentUser: String?
+    let onSignIn: () -> Void
     let onSettings: () -> Void
-    let onRewardsView: () -> Void
-    let onLogout: () -> Void
+    let onRewards: () -> Void
+    let onSignOut: () -> Void
+    let onAllData: () -> Void
+    let onMonetizationRequests: () -> Void
 
     var body: some View {
         Menu {
-            if let user = currentUser {
-                Text("Username: \(user.username)")
+            if let currentUser = currentUser {
+                Text("Welcome, \(currentUser.capitalized)")
                     .font(.headline)
-                    .foregroundColor(.primary)
+
+                Button(action: onSettings) {
+                    Label("Settings", systemImage: "gearshape")
+                }
+
+                Button(action: onRewards) {
+                    Label("Rewards", systemImage: "star.fill")
+                }
+
+                Button(action: onAllData) {
+                    Label("All Data", systemImage: "folder.fill")
+                }
+
+                Button(action: onMonetizationRequests) {
+                    Label("Monetization Requests", systemImage: "creditcard")
+                }
 
                 Divider()
 
-                Button("Settings", action: onSettings)
-                Button("Rewards", action: onRewardsView)
-                Button("Logout", action: onLogout)
+                Button(role: .destructive, action: onSignOut) {
+                    Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                }
             } else {
-                Text("No user information available.")
-                    .foregroundColor(.red)
+                Button(action: onSignIn) {
+                    Label("Sign In", systemImage: "person.fill")
+                }
             }
         } label: {
-            Image(systemName: "ellipsis")
-                .imageScale(.large)
+            Image(systemName: "ellipsis.circle")
+                .font(.title)
+                .foregroundColor(.primary)
         }
     }
 }

@@ -1,70 +1,70 @@
 import SwiftUI
 
 struct MainView: View {
-    @State private var isLoggedIn: Bool = false
-    @State private var currentUser: User? = nil
-    @State private var showAuthModal: Bool = false
-    @State private var isSignUp: Bool = true
+    @EnvironmentObject private var userSettings: UserSettings
+
     @State private var showSettings: Bool = false
-    @State private var showRewardsView: Bool = false
+    @State private var showRewards: Bool = false
+    @State private var showAllData: Bool = false
+    @State private var showMonetizationDetail: Bool = false
+    @State private var showAuthPopup: Bool = false
 
     var body: some View {
-        NavigationView {
-            VStack {
-                if isLoggedIn {
-                    TaskListView()
-                } else {
-                    Text("Please log in to access tasks.")
-                        .foregroundColor(.secondary)
-                        .padding()
-                }
-            }
-            .navigationTitle("LabelLab")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    ToolbarMenu(
-                        currentUser: currentUser,
-                        onSettings: { showSettings = true },
-                        onRewardsView: { showRewardsView = true },
-                        onLogout: logout
-                    )
-                }
-            }
-            .onAppear {
-                checkAuthentication()
-            }
-            .fullScreenCover(isPresented: $showAuthModal) {
-                AuthenticationPopup(
-                    isSignUp: $isSignUp,
-                    onAuthenticationComplete: { user in
-                        currentUser = user
-                        isLoggedIn = true
-                        showAuthModal = false
-                    }
+        VStack {
+            Text("Hello, \(userSettings.username.isEmpty ? "Guest" : userSettings.username.capitalized)!")
+                .font(.largeTitle)
+                .padding()
+
+            TaskListView(onStartTask: { task in
+                print("Starting task: \(task.title)")
+            })
+            .padding()
+
+            Spacer()
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarMenu(
+                    currentUser: userSettings.isLoggedIn ? userSettings.username : nil,
+                    onSignIn: { showAuthPopup = true },
+                    onSettings: { showSettings = true },
+                    onRewards: { showRewards = true },
+                    onSignOut: { signOut() }, onAllData: { showAllData = false },
+                    onMonetizationRequests: { showMonetizationDetail = false }
                 )
-                .interactiveDismissDisabled(true) // Prevent swiping away
             }
-            .sheet(isPresented: $showSettings) {
-                SettingsView(isLoggedIn: $isLoggedIn)
-            }
-            .sheet(isPresented: $showRewardsView) {
-                RewardsView(user: currentUser)
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+                .environmentObject(userSettings)
+        }
+        .sheet(isPresented: $showRewards) {
+            RewardsView(userId: userSettings.id, username: userSettings.username)
+        }
+        .sheet(isPresented: $showAllData) {
+            AllDataView()
+                .environmentObject(userSettings)
+        }
+        .sheet(isPresented: $showMonetizationDetail) {
+            MonetizationDetailsView(
+                username: .constant(userSettings.username),
+                onComplete: handleMonetizationComplete
+            )
+        }
+        .sheet(isPresented: $showAuthPopup) {
+            AuthenticationPopup(isSignUp: .constant(true)) { user in
+                userSettings.updateForUser(user: user)
+                showAuthPopup = false
             }
         }
     }
 
-    private func checkAuthentication() {
-        if let loggedInUser = SwiftDataManager.shared.fetchAllUsers().first {
-            currentUser = loggedInUser
-            isLoggedIn = true
-        } else {
-            showAuthModal = true
-        }
+    private func handleMonetizationComplete(newUser: User) {
+        userSettings.updateForUser(user: newUser)
     }
 
-    private func logout() {
-        isLoggedIn = false
-        currentUser = nil
-        showAuthModal = true // Force authentication popup
+    private func signOut() {
+        userSettings.resetToGuest()
     }
 }

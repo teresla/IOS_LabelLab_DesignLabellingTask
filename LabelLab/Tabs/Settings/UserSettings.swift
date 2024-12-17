@@ -1,51 +1,29 @@
-//
-//  UserSettings.swift
-//  LabelLab
-//
-//  Created by Teresa Windlin on 18.11.2024.
-//
-
-import Foundation
 import SwiftUI
 
-@Observable class UserSettings {
+class UserSettings: ObservableObject {
     static let shared = UserSettings()
-    
+
+    @Published var isLoggedIn: Bool = false
+    @Published var username: String = "Default"
+    @Published var id: UUID = UUID()
+    @Published var isAdmin: Bool = false
+    @Published var isMonetized: Bool = false
+
     private init() {}
 
-    static let userDefaultsKeyName = "levels.user-settings.name"
-    static let userDefaultsKeyNickname = "levels.user.settings.nickname"
-    static let userDefaultsKeyUserId = "levels.user-settings.userId"
-
-    var name: String {
-        get {
-            UserDefaults.standard.string(forKey: Self.userDefaultsKeyName) ?? ""
-        }
-        set {
-            UserDefaults.standard.set(newValue, forKey: Self.userDefaultsKeyName)
-        }
+    func updateForUser(user: User) {
+        username = user.username
+        id = user.id
+        isAdmin = user.isAdmin
+        isMonetized = user.isMonetized
+        isLoggedIn = true
     }
 
-    var nickname: String {
-        get {
-            UserDefaults.standard.string(forKey: Self.userDefaultsKeyNickname) ?? ""
-        }
-        set {
-            UserDefaults.standard.set(newValue, forKey: Self.userDefaultsKeyNickname)
-        }
+    func resetToGuest() {
+        username = ""
+        id = UUID()
+        isAdmin = false
+        isMonetized = false
+        isLoggedIn = false
     }
-
-    var userId: UUID {
-        UserDefaults.standard.string(forKey: Self.userDefaultsKeyUserId)
-            .flatMap { UUID(uuidString: $0) }
-        ?? {
-            let uuid = UUID()
-            UserDefaults.standard.set(uuid.uuidString, forKey: Self.userDefaultsKeyUserId)
-            return uuid
-        }()
-    }
-
-    var alwaysUseDarkMode = false
-
-    var withPayment = false
 }

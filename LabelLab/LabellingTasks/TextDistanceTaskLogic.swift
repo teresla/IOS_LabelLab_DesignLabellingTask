@@ -1,34 +1,60 @@
+import Foundation
 import SwiftUI
 
 @MainActor
 class TextDistanceTaskLogic: ObservableObject {
     @Published var imageName: String = ""
-    @Published var text1: String = "Descriptive Text 1"
-    @Published var text2: String = "Descriptive Text 2"
+    @Published var text1: String = ""
+    @Published var text2: String = ""
     @Published var text1Offset: CGSize = .zero
     @Published var text2Offset: CGSize = .zero
-    @Published var isDraggingText1: Bool = false
-    @Published var isDraggingText2: Bool = false
 
-    init() {
-        reshuffleTask()
+    private let category: String
+
+    private var dataset: [String] {
+        switch category {
+        case "Clothes":
+            return ["edgypants", "sweatshirt", "sneakers", "bohodress", "dress", "jeans"]
+        case "Furniture":
+            return ["couch", "chair", "antiquearmchair", "midcenturymodern"]
+        default:
+            return ["0_1_aug", "0_2_aug", "0_cw", "0_prouds", "0_wb", "0",
+                    "1_1_aug", "1_2_aug", "1_cw", "1_prouds", "1_wb", "1",
+                    "2_1_aug", "2_2_aug", "2_cw", "2_prouds", "2_wb", "2"]
+        }
     }
 
-    func reshuffleTask() {
-        // Dummy placeholder values; in production, fetch random image and texts
-        imageName = "example_image"
-        text1 = "Elegant Design"
-        text2 = "Classic Appeal"
-        text1Offset = .zero
-        text2Offset = .zero
+    init(category: String) {
+        self.category = category
+        reshuffle()
     }
+
+    func reshuffle() {
+        let username = UserSettings.shared.username
+
+        // Filter attempts to match the selected category's dataset
+        let availableAttempts = SwiftDataManager.shared.fetchTextDistanceAttempts(forUsername: username)
+            .filter { $0.distanceText1 == 0 && $0.distanceText2 == 0 && dataset.contains($0.imageName) }
+        
+        if let attempt = availableAttempts.randomElement() {
+            imageName = attempt.imageName
+            text1 = attempt.text1
+            text2 = attempt.text2
+            text1Offset = .zero
+            text2Offset = .zero
+        } else {
+            print("No available attempts for the user.")
+        }
+    }
+
 
     func saveAttempt() {
-        let distanceText1 = calculateNormalizedDistance(text1Offset)
-        let distanceText2 = calculateNormalizedDistance(text2Offset)
+        let distanceText1 = GeometryHelpers.normalizedDistance(text1Offset)
+        let distanceText2 = GeometryHelpers.normalizedDistance(text2Offset)
 
         let attempt = TextDistanceAttempt(
-            userId: UserSettings.shared.userId,
+            userId: UserSettings.shared.id,
+            username: UserSettings.shared.username,
             imageName: imageName,
             text1: text1,
             text2: text2,
@@ -37,14 +63,7 @@ class TextDistanceTaskLogic: ObservableObject {
             timestamp: Date()
         )
 
-        SwiftDataManager.shared.modelContainer.mainContext.insert(attempt)
-        try? SwiftDataManager.shared.modelContainer.mainContext.save()
-
-        reshuffleTask()
-    }
-
-    private func calculateNormalizedDistance(_ offset: CGSize) -> Double {
-        let magnitude = sqrt(pow(Double(offset.width), 2) + pow(Double(offset.height), 2))
-        return magnitude / 200.0
+        SwiftDataManager.shared.saveTextDistanceAttempt(attempt, username: UserSettings.shared.username)
+        reshuffle()
     }
 }

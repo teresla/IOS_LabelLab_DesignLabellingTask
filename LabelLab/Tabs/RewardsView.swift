@@ -1,15 +1,8 @@
-//
-//  Untitled.swift
-//  LabelLab
-//
-//  Created by Teresa Windlin on 25.11.2024.
-//
-
 import SwiftUI
 import Charts
-
 struct RewardsView: View {
-    let user: User?
+    let userId: UUID
+    let username: String
     @State private var taskDistribution: [(String, Int)] = []
 
     var body: some View {
@@ -20,11 +13,16 @@ struct RewardsView: View {
                     .bold()
                     .padding()
 
+                Text("User: \(username)")
+                    .font(.subheadline)
+                    .padding(.bottom, 5)
+
                 if taskDistribution.isEmpty {
                     Text("No task data available.")
                         .foregroundColor(.secondary)
                         .padding()
                 } else {
+                    // Display chart as before
                     Chart {
                         ForEach(taskDistribution, id: \.0) { task, count in
                             SectorMark(angle: .value("Count", count))
@@ -52,22 +50,18 @@ struct RewardsView: View {
     }
 
     private func loadTaskData() {
-        guard let user = user else { return }
+        let distanceAttempts = SwiftDataManager.shared.fetchDistanceAttempts(forUsername: username)
+        let imageToTextAttempts = SwiftDataManager.shared.fetchImageToTextAttempts(forUsername: username)
+        let textDistanceAttempts = SwiftDataManager.shared.fetchTextDistanceAttempts(forUsername: username)
 
-        // Fetch all task attempts for the user
-        let distanceAttempts = SwiftDataManager.shared.fetchAllDistanceAttempts()
-            .filter { $0.userId == user.id }
-        let imageToTextAttempts = SwiftDataManager.shared.fetchAllImageToTextAttempts()
-            .filter { $0.userId == user.id }
-
-        // Calculate task distribution
         let distanceCount = distanceAttempts.count
         let imageToTextCount = imageToTextAttempts.count
+        let textDistanceCount = textDistanceAttempts.count
 
-        // Populate distribution
         taskDistribution = [
             ("Distance", distanceCount),
-            ("Image to Text", imageToTextCount)
+            ("Image to Text", imageToTextCount),
+            ("Text Distance", textDistanceCount)
         ]
     }
 }

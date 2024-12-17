@@ -1,3 +1,11 @@
+//
+//  MonetizationRequestsView.swift
+//  LabelLab
+//
+//  Created by Teresa Windlin on 15.12.2024.
+//
+
+
 import SwiftUI
 
 struct MonetizationRequestsView: View {

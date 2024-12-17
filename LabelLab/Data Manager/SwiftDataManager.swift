@@ -12,40 +12,52 @@ import SwiftUI
 @MainActor
 class SwiftDataManager {
     static let shared = SwiftDataManager()
-
+    
     let modelContainer: ModelContainer
-
+    
     private init() {
         do {
-            self.modelContainer = try ModelContainer(for: User.self, DistanceAttempt.self, ImageToTextAttempt.self)
+            self.modelContainer = try ModelContainer(
+                for: User.self,
+                DistanceAttempt.self,
+                ImageToTextAttempt.self,
+                TextDistanceAttempt.self // Added new model
+            )
         } catch {
             fatalError("Failed to initialize ModelContainer: \(error)")
         }
     }
-
-    // Save DistanceAttempt
-    func saveDistanceAttempt(_ attempt: DistanceAttempt) {
+    
+    // MARK: - DistanceAttempt
+    func saveDistanceAttempt(_ attempt: DistanceAttempt, username: String) {
+        print("Saving DistanceAttempt: ID = \(attempt.id), Username = \(username)")
+        let attempt = attempt
+        attempt.username = username // Associate with username
         modelContainer.mainContext.insert(attempt)
         do {
             try modelContainer.mainContext.save()
+            print("Successfully saved DistanceAttempt: \(attempt)")
         } catch {
             print("Error saving DistanceAttempt: \(error)")
         }
     }
 
-    // Fetch DistanceAttempts
-    func fetchAllDistanceAttempts() -> [DistanceAttempt] {
+    
+    func fetchDistanceAttempts(forUsername username: String) -> [DistanceAttempt] {
         let fetchDescriptor = FetchDescriptor<DistanceAttempt>()
         do {
-            return try modelContainer.mainContext.fetch(fetchDescriptor)
+            let attempts = try modelContainer.mainContext.fetch(fetchDescriptor)
+            return attempts.filter { $0.username == username }
         } catch {
             print("Error fetching DistanceAttempts: \(error)")
             return []
         }
     }
-
-    // Save ImageToTextAttempt
-    func saveImageToTextAttempt(_ attempt: ImageToTextAttempt) {
+    
+    // MARK: - ImageToTextAttempt
+    func saveImageToTextAttempt(_ attempt: ImageToTextAttempt, username: String) {
+        let attempt = attempt
+        attempt.username = username // Associate with username
         modelContainer.mainContext.insert(attempt)
         do {
             try modelContainer.mainContext.save()
@@ -53,19 +65,42 @@ class SwiftDataManager {
             print("Error saving ImageToTextAttempt: \(error)")
         }
     }
-
-    // Fetch ImageToTextAttempts
-    func fetchAllImageToTextAttempts() -> [ImageToTextAttempt] {
+    
+    func fetchImageToTextAttempts(forUsername username: String) -> [ImageToTextAttempt] {
         let fetchDescriptor = FetchDescriptor<ImageToTextAttempt>()
         do {
-            return try modelContainer.mainContext.fetch(fetchDescriptor)
+            let attempts = try modelContainer.mainContext.fetch(fetchDescriptor)
+            return attempts.filter { $0.username == username }
         } catch {
             print("Error fetching ImageToTextAttempts: \(error)")
             return []
         }
     }
     
-    // Save a new user
+    // MARK: - TextDistanceAttempt (NEW)
+    func saveTextDistanceAttempt(_ attempt: TextDistanceAttempt, username: String) {
+        let attempt = attempt
+        attempt.username = username // Associate with username
+        modelContainer.mainContext.insert(attempt)
+        do {
+            try modelContainer.mainContext.save()
+        } catch {
+            print("Error saving TextDistanceAttempt: \(error)")
+        }
+    }
+    
+    func fetchTextDistanceAttempts(forUsername username: String) -> [TextDistanceAttempt] {
+        let fetchDescriptor = FetchDescriptor<TextDistanceAttempt>()
+        do {
+            let attempts = try modelContainer.mainContext.fetch(fetchDescriptor)
+            return attempts.filter { $0.username == username }
+        } catch {
+            print("Error fetching TextDistanceAttempts: \(error)")
+            return []
+        }
+    }
+    
+    // MARK: - User Management
     func saveUser(_ user: User) {
         modelContainer.mainContext.insert(user)
         do {
@@ -74,8 +109,7 @@ class SwiftDataManager {
             print("Error saving user: \(error)")
         }
     }
-
-    // Fetch all users
+    
     func fetchAllUsers() -> [User] {
         let fetchDescriptor = FetchDescriptor<User>()
         do {
@@ -85,18 +119,72 @@ class SwiftDataManager {
             return []
         }
     }
+    
+    func updateUser(index: Int, update: (inout User) -> Void) {
+        var users = fetchAllUsers()
+        update(&users[index])
+        saveUser(users[index])
+    }
+    
+    func registerNewUser(username: String, categories: [String] = ["Watches"]) {
+        // Create a new user
+        let newUser = User(username: username)
 
-    // Check if username is taken
+        // Save the new user to SwiftData
+        SwiftDataManager.shared.saveUser(newUser)
+
+        // Automatically update UserSettings with the new user's details
+        UserSettings.shared.username = newUser.username
+        UserSettings.shared.id = newUser.id
+        
+        print("User registered: \(newUser.username), \(newUser.id.uuidString)")
+    }
+
+    
     func isUsernameTaken(_ username: String) -> Bool {
         let normalizedUsername = username.lowercased()
         return fetchAllUsers().contains { $0.username == normalizedUsername }
     }
     
-    func updateUser(index: Int, update: (inout User) -> Void) {
-            var users = fetchAllUsers()
-            update(&users[index])
-            saveUser(users[index])
+    // Debugging added for fetchAllDistanceAttempts
+    func fetchAllDistanceAttempts() -> [DistanceAttempt] {
+        print("Fetching all DistanceAttempts...")
+        let fetchDescriptor = FetchDescriptor<DistanceAttempt>()
+        do {
+            let attempts = try modelContainer.mainContext.fetch(fetchDescriptor)
+            print("Fetched DistanceAttempts: \(attempts.map { $0.id.uuidString })")
+            return attempts
+        } catch {
+            print("Error fetching DistanceAttempts: \(error)")
+            return []
         }
-
+    }
+    
+    // Debugging added for fetchAllImageToTextAttempts
+    func fetchAllImageToTextAttempts() -> [ImageToTextAttempt] {
+        print("Fetching all ImageToTextAttempts...")
+        let fetchDescriptor = FetchDescriptor<ImageToTextAttempt>()
+        do {
+            let attempts = try modelContainer.mainContext.fetch(fetchDescriptor)
+            print("Fetched ImageToTextAttempts: \(attempts.map { $0.id.uuidString })")
+            return attempts
+        } catch {
+            print("Error fetching ImageToTextAttempts: \(error)")
+            return []
+        }
+    }
+    
+    // Debugging added for fetchAllTextDistanceAttempts
+    func fetchAllTextDistanceAttempts() -> [TextDistanceAttempt] {
+        print("Fetching all TextDistanceAttempts...")
+        let fetchDescriptor = FetchDescriptor<TextDistanceAttempt>()
+        do {
+            let attempts = try modelContainer.mainContext.fetch(fetchDescriptor)
+            print("Fetched TextDistanceAttempts: \(attempts.map { $0.id.uuidString })")
+            return attempts
+        } catch {
+            print("Error fetching TextDistanceAttempts: \(error)")
+            return []
+        }
+    }
 }
-

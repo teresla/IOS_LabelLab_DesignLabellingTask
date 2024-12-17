@@ -1,103 +1,65 @@
-//
-//  ImageToText.swift
-//  LabelLab
-//
-//  Created by Teresa Windlin on 13.11.2024.
-//
-
 import SwiftUI
 
 struct ImageToTextTask: LabellingTask {
     let id = UUID()
     let title: String = "Image to Text"
     let description: String = "Convert an image to text."
-    let titelImage: Image = Image(systemName: "arrow.2.circlepath.circle")
+    let titelImage: Image = Image(ImageResource.iconToText)
+    let category: String
 
-    // Dataset of image names
-    let dataset = ["0_1_aug", "0_2_aug", "0_cw", "0_prouds", "0_wb", "0",
-                   "1_1_aug", "1_2_aug", "1_cw", "1_prouds", "1_wb", "1",
-                   "2_1_aug", "2_2_aug", "2_cw", "2_prouds", "2_wb", "2"]
-    @State private var currentImage: String = ""
-    @State private var textInput: String = ""
-    @State private var showConfirmButton: Bool = false
+    @StateObject private var logic: ImageToTextTaskLogic
 
-    private let minCharacters = 10
-    private let maxCharacters = 100
+    init(category: String) {
+        self.category = category
+        _logic = StateObject(wrappedValue: ImageToTextTaskLogic(category: category))
+    }
 
     var body: some View {
-        VStack {
-            // Random Image Display
-            if let uiImage = UIImage(named: currentImage) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(height: 200)
-                    .padding()
-            }
+        TaskContainerView(
+            taskTitle: title,
+            onSubmit: { logic.saveAttempt() },
+            onReshuffle: { logic.shuffleImage() }
+        ) {
+            GeometryReader { geometry in
+                let imageSize = geometry.size.width * 0.28
 
-            // Textbox with Character Limit
-            TextField("Describe the image...", text: $textInput)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
-                .onChange(of: textInput) { newValue in
-                    // Enforce character limits
-                    if newValue.count < minCharacters || newValue.count > maxCharacters {
-                        showConfirmButton = false
-                    } else {
-                        showConfirmButton = true
+                VStack(spacing: 20) {
+                    Spacer()
+
+                    // Center Image Display with Accent Blue Border
+                    if let uiImage = UIImage(named: logic.currentImage) {
+                        ZStack {
+                            // Accent Blue Border - Slightly Larger than the Image
+                            Circle()
+                                .stroke(Color("AccentBlue"), lineWidth: 6)
+                                .frame(width: imageSize * 3.2, height: imageSize * 3.2)
+
+                            // Image
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: imageSize * 3, height: imageSize * 3)
+                                .clipShape(Circle())
+                        }
                     }
-                    // Trim text if it exceeds the maxCharacters
-                    if newValue.count > maxCharacters {
-                        textInput = String(newValue.prefix(maxCharacters))
-                    }
+
+                    // Textbox with Rounded Corners
+                    TextField("Describe the image...", text: $logic.textInput)
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(logic.isTextValid ? Color.green : Color.red, lineWidth: 2)
+                        )
+                        .padding([.leading, .trailing], 40)
+
+                    Text("Character count: \(logic.textInput.count)/\(logic.maxCharacters)")
+                        .font(.caption)
+                        .foregroundColor(logic.isTextValid ? .green : .red)
+
+                    Spacer()
                 }
-
-            Text("Character count: \(textInput.count)/\(maxCharacters)")
-                .font(.caption)
-                .foregroundColor(textInput.count < minCharacters ? .red : .green)
-
-            Spacer()
-
-            // Shuffle Button
-            Button("Shuffle Image") {
-                shuffleImage()
-            }
-            .buttonStyle(.borderedProminent)
-            .padding()
-
-            // Confirm Button (Only Visible When Text is Valid)
-            if showConfirmButton {
-                Button("Confirm") {
-                    saveAttempt()
-                }
-                .buttonStyle(.bordered)
-                .padding()
             }
         }
-        .onAppear {
-            shuffleImage()
-        }
-        .navigationTitle("Image to Text")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
     }
-
-    // Shuffle Image Function
-    private func shuffleImage() {
-        currentImage = dataset.randomElement() ?? "image1"
-        textInput = ""
-        showConfirmButton = false
-    }
-
-    // Save Attempt Function
-    private func saveAttempt() {
-        let attempt = ImageToTextAttempt(
-            userId: UserSettings.shared.userId,
-            imageName: currentImage,
-            text: textInput,
-            timestamp: Date()
-        )
-
-        SwiftDataManager.shared.saveImageToTextAttempt(attempt)
-    }
-
 }

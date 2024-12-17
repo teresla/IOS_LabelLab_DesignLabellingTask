@@ -16,7 +16,7 @@ final class LabellerCodeManager {
 
     private init() {}
 
-    private var codes: [LabellerCode] = [
+    var codes: [LabellerCode] = [
         LabellerCode(code: "ABC123", categories: ["Watches"], isUsed: false),
         LabellerCode(code: "DEF456", categories: ["Watches"], isUsed: false),
         LabellerCode(code: "GHI789", categories: ["Watches"], isUsed: true)
