@@ -63,13 +63,18 @@ struct DistanceBaseView<CenterContent: View, LeftContent: View, RightContent: Vi
 
             // Center Image
             AnyView(centerContent())
-                .frame(width: baseSize, height: baseSize)
-                .scaleEffect(enlargedIndex == 1 ? 1.5 : 1.0) // Adjust zoom scale here
+                .frame(
+                    width: enlargedIndex == 1 ? zoomedSize : baseSize, // Use zoomedSize when enlarged
+                    height: enlargedIndex == 1 ? zoomedSize : baseSize
+                )
+                //.scaleEffect(enlargedIndex == 1 ? 1.5 : 1.0) // Adjust zoom scale here
                 .clipShape(Circle())
                 .overlay(Circle().stroke(Color("AccentBlue"), lineWidth: 4))
                 .position(x: XAnchor, y: YAnchor)
                 .onTapGesture {
-                    withAnimation { enlargedIndex = enlargedIndex == 1 ? nil : 1 }
+                    withAnimation {
+                        enlargedIndex = enlargedIndex == 1 ? nil : 1
+                    }
                 }
 
 
@@ -98,8 +103,18 @@ struct DistanceBaseView<CenterContent: View, LeftContent: View, RightContent: Vi
                         .onEnded { _ in isDraggingLeft = false }
                 )
                 .onTapGesture {
-                    withAnimation { enlargedIndex = enlargedIndex == 2 ? nil : 2 }
+                    withAnimation {
+                        if enlargedIndex == 3 { // Right is enlarged -> shrink Right and enlarge Left
+                            enlargedIndex = 2
+                        } else if enlargedIndex == 2 { // Left is already enlarged -> shrink Left
+                            enlargedIndex = nil
+                        } else { // Enlarge Left
+                            enlargedIndex = 2
+                        }
+                    }
                 }
+
+
 
             // Right Image
             AnyView(rightContent())
@@ -126,8 +141,18 @@ struct DistanceBaseView<CenterContent: View, LeftContent: View, RightContent: Vi
                         .onEnded { _ in isDraggingRight = false }
                 )
                 .onTapGesture {
-                    withAnimation { enlargedIndex = enlargedIndex == 3 ? nil : 3 }
+                    withAnimation {
+                        if enlargedIndex == 2 { // Left is enlarged -> shrink Left and enlarge Right
+                            enlargedIndex = 3
+                        } else if enlargedIndex == 3 { // Right is already enlarged -> shrink Right
+                            enlargedIndex = nil
+                        } else { // Enlarge Right
+                            enlargedIndex = 3
+                        }
+                    }
                 }
+
+
         }
     }
 }
