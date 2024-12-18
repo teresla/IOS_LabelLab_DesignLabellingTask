@@ -187,4 +187,20 @@ class SwiftDataManager {
             return []
         }
     }
+
+        // **New Method**: Fetch images with at least two texts
+    func fetchImagesWithMultipleTexts(forUsername username: String, minimumTexts: Int = 2) -> [(imageName: String, texts: [String])] {
+        let attempts = fetchImageToTextAttempts(forUsername: username)
+        
+        // Group attempts by imageName
+        let grouped = Dictionary(grouping: attempts, by: { $0.imageName })
+        
+        // Filter groups with at least 'minimumTexts' texts
+        let filtered = grouped.filter { $0.value.count >= minimumTexts }
+        
+        // Map to desired format
+        let result = filtered.map { (imageName: $0.key, texts: $0.value.map { $0.text }) }
+        
+        return result
+    }
 }

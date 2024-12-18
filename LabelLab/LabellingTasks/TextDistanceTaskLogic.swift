@@ -32,23 +32,34 @@ class TextDistanceTaskLogic: ObservableObject {
     func reshuffle() {
         let username = UserSettings.shared.username
 
-        // Filter attempts to match the selected category's dataset
-        let availableAttempts = SwiftDataManager.shared.fetchTextDistanceAttempts(forUsername: username)
-            .filter { $0.distanceText1 == 0 && $0.distanceText2 == 0 && dataset.contains($0.imageName) }
-        
-        if let attempt = availableAttempts.randomElement() {
-            imageName = attempt.imageName
-            text1 = attempt.text1
-            text2 = attempt.text2
-            text1Offset = .zero
-            text2Offset = .zero
-        } else {
-            print("No available attempts for the user.")
+        // Fetch images with at least two texts
+        let imagesWithTexts = SwiftDataManager.shared.fetchImagesWithMultipleTexts(forUsername: username, minimumTexts: 2)
+            .filter { dataset.contains($0.imageName) }
+
+        guard let selectedImage = imagesWithTexts.randomElement() else {
+            print("No available images with at least two texts for the user.")
+            return
         }
+
+        imageName = selectedImage.imageName
+
+        // Randomly select two different texts
+        if selectedImage.texts.count >= 2 {
+            let shuffledTexts = selectedImage.texts.shuffled()
+            text1 = shuffledTexts[0]
+            text2 = shuffledTexts[1]
+        } else {
+            // Fallback if less than two texts are available
+            text1 = selectedImage.texts.first ?? ""
+            text2 = ""
+        }
+
+        text1Offset = .zero
+        text2Offset = .zero
     }
 
-
     func saveAttempt() {
+        // Calculate normalized distances (assuming this is how it's done)
         let distanceText1 = GeometryHelpers.normalizedDistance(text1Offset)
         let distanceText2 = GeometryHelpers.normalizedDistance(text2Offset)
 
