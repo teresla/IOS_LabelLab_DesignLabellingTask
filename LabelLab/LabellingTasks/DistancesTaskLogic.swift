@@ -14,9 +14,9 @@ class DistancesTaskLogic: ObservableObject {
     private var dataset: [String] {
         switch category {
         case "Clothes":
-            return ["edgy pants", "sweatshirt", "sneakers", "bohodress", "dress", "jeans"]
+            return ["edgy pants", "sweatshirt", "sneakers", "boho dress", "dress", "jeans"]
         case "Furniture":
-            return ["couch", "chair", "antiquearmchair", "midcenturymodern"]
+            return ["coutch", "chair", "antiquearmchair", "midcenturymodern"]
         default:
             return ["0_1_aug", "0_2_aug", "0_cw", "0_prouds", "0_wb", "0",
                     "1_1_aug", "1_2_aug", "1_cw", "1_prouds", "1_wb", "1",

@@ -16,7 +16,7 @@ class TextDistanceTaskLogic: ObservableObject {
         case "Clothes":
             return ["edgypants", "sweatshirt", "sneakers", "bohodress", "dress", "jeans"]
         case "Furniture":
-            return ["couch", "chair", "antiquearmchair", "midcenturymodern"]
+            return ["coutch", "chair", "antiquearmchair", "midcenturymodern"]
         default:
             return ["0_1_aug", "0_2_aug", "0_cw", "0_prouds", "0_wb", "0",
                     "1_1_aug", "1_2_aug", "1_cw", "1_prouds", "1_wb", "1",

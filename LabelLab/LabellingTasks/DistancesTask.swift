@@ -4,7 +4,7 @@ import UIKit
 struct DistancesTask: LabellingTask {
     let id = UUID()
     let title: String = "Image Similarity Task"
-    let description: String = "Drag the images along the lines to show their similarity to the center image."
+    let description: String = "Drag the top two images so theyr distance to the bottom image represents the similarity between them."
     let titelImage: Image = Image(ImageResource.iconDistances)
     let category: String
 

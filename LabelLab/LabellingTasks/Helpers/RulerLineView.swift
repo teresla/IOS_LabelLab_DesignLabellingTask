@@ -32,14 +32,14 @@ struct RulerLineView: View {
 
             Group {
                 Path { path in
-                    path.move(to: leftTick.offset(by: -5, perpendicularTo: startLeft, endPoint: endLeft))
-                    path.addLine(to: leftTick.offset(by: 5, perpendicularTo: startLeft, endPoint: endLeft))
+                    path.move(to: leftTick.offset(by: -10, perpendicularTo: startLeft, endPoint: endLeft))
+                    path.addLine(to: leftTick.offset(by: 10, perpendicularTo: startLeft, endPoint: endLeft))
                 }
                 .stroke(Color.gray, lineWidth: lineThickness)
 
                 Path { path in
-                    path.move(to: rightTick.offset(by: -5, perpendicularTo: startRight, endPoint: endRight))
-                    path.addLine(to: rightTick.offset(by: 5, perpendicularTo: startRight, endPoint: endRight))
+                    path.move(to: rightTick.offset(by: -10, perpendicularTo: startRight, endPoint: endRight))
+                    path.addLine(to: rightTick.offset(by: 10, perpendicularTo: startRight, endPoint: endRight))
                 }
                 .stroke(Color.gray, lineWidth: lineThickness)
             }
