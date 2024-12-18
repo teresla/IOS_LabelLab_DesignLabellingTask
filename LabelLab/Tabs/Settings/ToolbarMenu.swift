@@ -6,8 +6,6 @@ struct ToolbarMenu: View {
     let onSettings: () -> Void
     let onRewards: () -> Void
     let onSignOut: () -> Void
-    let onAllData: () -> Void
-    let onMonetizationRequests: () -> Void
 
     var body: some View {
         Menu {
@@ -21,14 +19,6 @@ struct ToolbarMenu: View {
 
                 Button(action: onRewards) {
                     Label("Rewards", systemImage: "star.fill")
-                }
-
-                Button(action: onAllData) {
-                    Label("All Data", systemImage: "folder.fill")
-                }
-
-                Button(action: onMonetizationRequests) {
-                    Label("Monetization Requests", systemImage: "creditcard")
                 }
 
                 Divider()

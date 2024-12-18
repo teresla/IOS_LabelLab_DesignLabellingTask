@@ -3,7 +3,7 @@ import SwiftUI
 struct TextDistanceTask: LabellingTask {
     let id = UUID()
     let title: String = "Text Similarity Task"
-    let description: String = "Drag the texts along the lines to show their similarity to the center text."
+    let description: String = "Arrange the top two textss at distances from the bottom image that accurately reflect their conceptiual similarities."
     let titelImage: Image = Image(ImageResource.iconWhichText)
 
     let category: String

@@ -8,6 +8,9 @@ struct MainView: View {
     @State private var showAllData: Bool = false
     @State private var showMonetizationDetail: Bool = false
     @State private var showAuthPopup: Bool = false
+    @State private var showLoginView: Bool = false
+    
+    @State private var isSignUpMode: Bool = true
 
     var body: some View {
         VStack {
@@ -30,8 +33,7 @@ struct MainView: View {
                     onSignIn: { showAuthPopup = true },
                     onSettings: { showSettings = true },
                     onRewards: { showRewards = true },
-                    onSignOut: { signOut() }, onAllData: { showAllData = false },
-                    onMonetizationRequests: { showMonetizationDetail = false }
+                    onSignOut: { signOut() }
                 )
             }
         }
@@ -53,18 +55,30 @@ struct MainView: View {
             )
         }
         .sheet(isPresented: $showAuthPopup) {
-            AuthenticationPopup(isSignUp: .constant(true)) { user in
+            AuthenticationPopup(isSignUp: $isSignUpMode) { user in
                 userSettings.updateForUser(user: user)
                 showAuthPopup = false
             }
         }
-    }
-
-    private func handleMonetizationComplete(newUser: User) {
-        userSettings.updateForUser(user: newUser)
+        .sheet(isPresented: $showLoginView) {
+            LoginView(isAuthenticated: Binding(
+                get: { userSettings.isLoggedIn },
+                set: { newValue in
+                    if !newValue {
+                        userSettings.resetToGuest()
+                    }
+                }
+            ))
+            .environmentObject(userSettings)
+        }
     }
 
     private func signOut() {
         userSettings.resetToGuest()
+        showLoginView = true
+    }
+
+    private func handleMonetizationComplete(newUser: User) {
+        userSettings.updateForUser(user: newUser)
     }
 }

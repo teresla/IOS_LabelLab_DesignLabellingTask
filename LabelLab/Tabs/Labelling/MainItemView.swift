@@ -60,6 +60,7 @@ struct MainItemView: View {
                                 .background(categoryColors[selectedCategory] ?? Color.gray)
                                 .cornerRadius(10)
                                 .frame(maxWidth: .infinity)
+                                .padding(.bottom, 10)
                         }
                     }
                 }

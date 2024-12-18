@@ -3,7 +3,7 @@ import SwiftUI
 struct ImageToTextTask: LabellingTask {
     let id = UUID()
     let title: String = "Image to Text"
-    let description: String = "Convert an image to text."
+    let description: String = "Write a phrase or adjective that captures the design and aesthetic of the image. "
     let titelImage: Image = Image(ImageResource.iconToText)
     let category: String
 
